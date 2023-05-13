@@ -53,6 +53,12 @@ class MyStack extends TerraformStack {
         accountId: "back-runner",
     });
 
+    new google.projectIamMember.ProjectIamMember(this, "backRunnerToSecret", {
+        member: `serviceAccount:${backRunner.email}`,
+        project,
+        role: "roles/secretmanager.secretAccessor",
+    });
+
     const backService = new google.cloudRunV2Service.CloudRunV2Service(this, 'backService', {
         location: region,
         name: 'back-service',
