@@ -114,6 +114,7 @@ class MyStack extends TerraformStack {
                 },
             },
         },
+        location: region,
         name: "front-service",
         serviceConfig: {
             environmentVariables: {
