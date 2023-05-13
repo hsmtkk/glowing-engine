@@ -22,7 +22,8 @@
   "dependencies": {
     "@cdktf/provider-google": "7.0.4",
     "cdktf": "^0.16.1",
-    "constructs": "^10.2.21"
+    "constructs": "^10.2.21",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",
