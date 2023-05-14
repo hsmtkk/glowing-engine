@@ -1,11 +1,12 @@
 steps:
 - name: gcr.io/kaniko-project/executor:latest
   id: front-build
-  dir: front
   args:
   - --cache=true
+  - --context=front
   - --cache-ttl=24h
   - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/front:${COMMIT_SHA}
+  - --dockerfile=front/Dockerfile
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
   id: front-deploy
   waitFor:
