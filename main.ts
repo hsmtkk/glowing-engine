@@ -59,26 +59,6 @@ class MyStack extends TerraformStack {
         role: "roles/secretmanager.secretAccessor",
     });
 
-    const backService = new google.cloudRunV2Service.CloudRunV2Service(this, 'backService', {
-        location: region,
-        name: 'back-service',
-        template: {
-            containers: [{
-                env: [{
-                    name: "GOURMET_SEARCH_API_KEY",
-                    valueSource: {
-                        secretKeyRef: {
-                            secret: gourmetSearchAPIKey.secretId,
-                            version: "latest",
-                        },
-                    },
-                }],
-                image: "us-docker.pkg.dev/cloudrun/container/hello",
-            }],
-            serviceAccount: backRunner.email,
-        },
-    });
-
     const asset = new TerraformAsset(this, "asset", {
         path: path.resolve("back"),
         type: AssetType.ARCHIVE,
@@ -103,7 +83,8 @@ class MyStack extends TerraformStack {
         source: asset.path,
     });
 
-    new google.cloudfunctions2Function.Cloudfunctions2Function(this, "frontService", {
+
+    const backService = new google.cloudfunctions2Function.Cloudfunctions2Function(this, "backService", {
         buildConfig: {
             runtime: "go120",
             entryPoint: "EntryPoint",
@@ -115,12 +96,31 @@ class MyStack extends TerraformStack {
             },
         },
         location: region,
-        name: "front-service",
+        name: "back-service",
         serviceConfig: {
-            environmentVariables: {
-                BACK_SERVICE_URL: backService.uri,
-            },
-            serviceAccountEmail: frontRunner.email,
+            secretEnvironmentVariables: [{
+                key: "GOURMET_SEARCH_API_KEY",
+                projectId: project,
+                secret: gourmetSearchAPIKey.secretId,
+                version: "latest",
+            }],
+            serviceAccountEmail: backRunner.email,
+        },
+    });
+
+
+    new google.cloudRunV2Service.CloudRunV2Service(this, 'frontService', {
+        location: region,
+        name: 'front-service',
+        template: {
+            containers: [{
+                env: [{
+                    name: "BACK_SERVICE_URL",
+                    value: backService.serviceConfig.uri,
+                }],
+                image: "us-docker.pkg.dev/cloudrun/container/hello",
+            }],
+            serviceAccount: frontRunner.email,
         },
     });
 
