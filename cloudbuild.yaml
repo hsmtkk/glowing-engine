@@ -20,7 +20,7 @@ steps:
   - --region=${_REGION}
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
   id: back-deploy
-  waitfor: ['-']
+  waitFor: ['-']
   entrypoint: gcloud
   dir: front
   args:
