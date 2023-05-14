@@ -1,18 +1,33 @@
 steps:
 - name: gcr.io/kaniko-project/executor:latest
+  id: front-build
+  dir: front
   args:
   - --cache=true
   - --cache-ttl=24h
-  - --context=front
   - --destination=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/front:${COMMIT_SHA}
-  - --dockerfile=front/Dockerfile
 - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  id: front-deploy
+  waitFor:
+  - front-build
   entrypoint: gcloud
   args:
   - run
   - deploy
+  - front-service
   - --execution-environment=gen2
   - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/registry/front:${COMMIT_SHA}
-  - --region=$_REGION
+  - --region=${_REGION}
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  id: back-deploy
+  waitfor: ['-']
+  entrypoint: gcloud
+  dir: front
+  args:
+  - functions
+  - deploy
+  - back-service
+  - --gen2
+  - --region=${_REGION}
 substitutions:
   _REGION: us-central1
