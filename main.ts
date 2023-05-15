@@ -2,6 +2,7 @@ import { Construct } from "constructs";
 import { App, TerraformStack, GcsBackend, TerraformAsset, AssetType } from "cdktf";
 import * as google from "@cdktf/provider-google";
 import * as path from "path";
+import { DataGoogleIamPolicy } from "@cdktf/provider-google/lib/data-google-iam-policy";
 
 const project = "glowing-engine-386523";
 const region = "us-central1";
@@ -47,6 +48,12 @@ class MyStack extends TerraformStack {
 
     const frontRunner = new google.serviceAccount.ServiceAccount(this, 'frontRunner', {
         accountId: "front-runner",
+    });
+
+    new google.projectIamMember.ProjectIamMember(this, 'frontRunnerToFunctions', {
+        member: `serviceAccount:${frontRunner.email}`,
+        project,
+        role: "roles/run.invoker",
     });
 
     const backRunner = new google.serviceAccount.ServiceAccount(this, 'backRunner', {
@@ -108,8 +115,7 @@ class MyStack extends TerraformStack {
         },
     });
 
-
-    new google.cloudRunV2Service.CloudRunV2Service(this, 'frontService', {
+    const frontService = new google.cloudRunV2Service.CloudRunV2Service(this, 'frontService', {
         location: region,
         name: 'front-service',
         template: {
@@ -122,6 +128,19 @@ class MyStack extends TerraformStack {
             }],
             serviceAccount: frontRunner.email,
         },
+    });
+
+    const publicData = new DataGoogleIamPolicy(this, "publicData", {
+        binding: [{
+            role: "roles/run.invoker",
+            members: ["allUsers"],
+        }],
+    });
+
+    new google.cloudRunServiceIamPolicy.CloudRunServiceIamPolicy(this, "frontPublic", {
+        location: region,
+        policyData: publicData.policyData,
+        service: frontService.name,
     });
 
   }
