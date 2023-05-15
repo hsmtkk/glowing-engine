@@ -23,7 +23,7 @@ def main() -> None:
                 st.error(f"HTTP status code {resp.status_code}: {resp.text}")
             resp_dict = resp.json()
             df = pd.DataFrame.from_dict(resp_dict)
-            st.DataFrame(df)
+            st.dataframe(df)
             st.map(df)
 
 
