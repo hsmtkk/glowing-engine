@@ -42,6 +42,7 @@ func (s *searcherImpl) Search(keyword string) ([]Result, error) {
 	query.Set("keyword", keyword)
 	query.Set("format", "json")
 	url.RawQuery = query.Encode()
+	log.Print(url.String())
 	resp, err := http.Get(url.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to send HTTP GET: %w", err)
