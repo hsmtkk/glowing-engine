@@ -9,7 +9,7 @@ import streamlit as st
 def main() -> None:
     back_service_url = os.environ["BACK_SERVICE_URL"]
     id_token = get_id_token(back_service_url)
-    headers = {"Authorization", f"Bearer {id_token}"}
+    headers = {"Authorization": f"Bearer {id_token}"}
 
     with st.form("form"):
         keyword = st.text_input(label="キーワード", value="新宿")
