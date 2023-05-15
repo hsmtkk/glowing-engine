@@ -1,6 +1,7 @@
 package gourmetsearch
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -10,14 +11,14 @@ import (
 
 const GOURMET_SEARCH_URL = "http://webservice.recruit.co.jp/hotpepper/gourmet/v1/"
 
-type Result struct {
+type Shop struct {
 	Name string  `json:"name"`
 	Lat  float64 `json:"lat"`
 	Lon  float64 `json:"lon"`
 }
 
 type Searcher interface {
-	Search(keyword string) ([]Result, error)
+	Search(keyword string) ([]Shop, error)
 }
 
 type searcherImpl struct {
@@ -29,10 +30,20 @@ func New(apiKey string) Searcher {
 }
 
 type responseSchema struct {
-	Name string `json`
+	Results responseSchemaResults `json:"results"`
 }
 
-func (s *searcherImpl) Search(keyword string) ([]Result, error) {
+type responseSchemaResults struct {
+	Shops []responseSchemaShop `json:"shop"`
+}
+
+type responseSchemaShop struct {
+	Name string  `json:"name"`
+	Lat  float64 `json:"lat"`
+	Lng  float64 `json:"lng"`
+}
+
+func (s *searcherImpl) Search(keyword string) ([]Shop, error) {
 	url, err := url.Parse(GOURMET_SEARCH_URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse URL %s: %w", GOURMET_SEARCH_URL, err)
@@ -52,6 +63,17 @@ func (s *searcherImpl) Search(keyword string) ([]Result, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
-	log.Print(string(contents))
-	return nil, nil
+	resSchema := responseSchema{}
+	if err := json.Unmarshal(contents, &resSchema); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+	shops := []Shop{}
+	for _, s := range resSchema.Results.Shops {
+		shops = append(shops, Shop{
+			Name: s.Name,
+			Lat:  s.Lat,
+			Lon:  s.Lng,
+		})
+	}
+	return shops, nil
 }
