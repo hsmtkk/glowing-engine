@@ -22,7 +22,9 @@ def main() -> None:
             if resp.status_code < 200 or resp.status_code >= 300:
                 st.error(f"HTTP status code {resp.status_code}: {resp.text}")
             resp_dict = resp.json()
-            st.write(resp_dict)
+            df = pd.DataFrame.from_dict(resp_dict)
+            st.DataFrame(df)
+            st.map(df)
 
 
 def get_id_token(audience: str) -> str:
