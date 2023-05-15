@@ -23,7 +23,7 @@ steps:
   id: back-deploy
   waitFor: ['-']
   entrypoint: gcloud
-  dir: front
+  dir: back
   args:
   - functions
   - deploy
